@@ -18,12 +18,9 @@ import google.auth
 import vertexai
 from google import genai
 from google.genai import types
+from .prompt import SYSTEM_PROMPT
+from .tools import log_scores_tool, get_scores_tool
 
-from app.scoring_agent.agent import speach_eval_agent
-# from app.scene_understanding.agent import (
-#     image_generation_agent
-# )
-# Constants
 VERTEXAI = os.getenv("VERTEXAI", "true").lower() == "true"
 LOCATION = "us-central1"
 MODEL_ID = "gemini-live-2.5-flash-preview-native-audio"
@@ -32,7 +29,6 @@ MODEL_ID = "gemini-live-2.5-flash-preview-native-audio"
 credentials, project_id = google.auth.default()
 vertexai.init(project=project_id, location=LOCATION)
 
-
 if VERTEXAI:
     genai_client = genai.Client(project=project_id, location=LOCATION, vertexai=True)
 else:
@@ -40,7 +36,8 @@ else:
     genai_client = genai.Client(http_options={"api_version": "v1alpha"})
 
 tool_functions = {
-    "speach_eval_agent": speach_eval_agent,
+    "log_scores_tool": log_scores_tool,
+    "get_scores_tool": get_scores_tool,
 }
 live_connect_config = types.LiveConnectConfig(
     response_modalities=[types.Modality.AUDIO],
@@ -48,7 +45,7 @@ live_connect_config = types.LiveConnectConfig(
     system_instruction=types.Content(
         parts=[
             types.Part(
-                text="""You are a helpful AI assistant designed to provide accurate and useful information. You are able to accommodate different languages and tones of voice."""
+                text=SYSTEM_PROMPT
             )
         ]
     ),
